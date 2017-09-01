@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
+
+	<context:component-scan base-package="com.codi.jobservice,com.codi.bus.core,com.codi.fundData,com.codi.fcloud">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<bean id="validator" class="com.codi.base.validation.ValidatorFactoryBean" />
+
+	<bean id="validatorAdapter" class="com.codi.base.validation.CodiSpringValidatorAdapter">
+		<constructor-arg type="javax.validation.Validator" ref="validator" />
+	</bean>
+
+	<!-- 启动对@AspectJ注解的支持 -->
+	<aop:aspectj-autoproxy />
+
+	<bean id="dataSourceAllAspect" class="com.codi.base.dataSource.aop.DataSourceAllAspect">
+		<constructor-arg type="java.lang.String" value="DATA_SOURCE_FUND_DETAIL" />
+	</bean>
+
+	<aop:config>
+		<aop:aspect ref="dataSourceAllAspect" order="1">
+			<aop:pointcut expression="execution( public * com.codi.fundData.dao.impl.*.*(..) )" id="dataSourceAllPulicMethod" />
+			<aop:before method="before" pointcut-ref="dataSourceAllPulicMethod" />
+			<aop:after method="after" pointcut-ref="dataSourceAllPulicMethod" />
+		</aop:aspect>
+	</aop:config>
+
+	<bean id="dataSourceCodi" class="com.codi.base.dataSource.CodiDataSource" init-method="init" destroy-method="close">
+		<constructor-arg type="java.lang.String" value="" />
+	</bean>
+
+	<!-- 基金详情数据源 -->
+	<bean id="dataSourceFundDetail" class="com.codi.base.dataSource.CodiDataSource" init-method="init" destroy-method="close">
+		<constructor-arg type="java.lang.String" value="fund-detail" />
+	</bean>
+
+
+	<bean id="pagePlugin" class="com.codi.base.dao.plugin.page.PagePlugin">
+		<property name="properties">
+			<props>
+				<prop key="dialect">mysql</prop>
+				<prop key="pageSqlId">.*query.*</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="typeAliasesPackage" value="com.codi.jobservice.domain,com.codi.bus.core.domain,com.codi.fundData.domain" />
+		<property name="mapperLocations" value="classpath*:mybatis/*.xml" />
+		<property name="plugins">
+			<array>
+				<ref bean="pagePlugin" />
+			</array>
+		</property>
+	</bean>
+
+	<bean id="dataSource" class="com.codi.base.dataSource.DynamicDataSource">
+		<property name="defaultTargetDataSource" ref="dataSourceCodi" />
+		<property name="targetDataSources">
+			<map>
+				<entry key="DATA_SOURCE_CODI" value-ref="dataSourceCodi" />
+				<entry key="DATA_SOURCE_FUND_DETAIL" value-ref="dataSourceFundDetail" />
+			</map>
+		</property>
+	</bean>
+
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- redis begin -->
+	<bean id="redisConnectionFactory" class="com.codi.base.cache.RedisConnectionFactory" />
+
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="redisConnectionFactory" />
+		<property name="defaultSerializer">
+			<!-- 使用简单的字符串序列化 -->
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<!-- 序列化对象 -->
+		<property name="valueSerializer">
+			<bean class="org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer" />
+		</property>
+	</bean>
+	<!-- redis end -->
+
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+
+	<!-- 用于持有ApplicationContext,可以使用SpringContextHolder.getBean('xxxx')的静态方法得到spring bean对象 -->
+	<bean class="com.codi.base.spring.SpringContextHolder" lazy-init="false" />
+
+
+    <!-- 方法日志记录切面 -->
+    <bean id="customJSONAPILogAspect" class="com.codi.bus.core.aop.CustomJSONAPILogAspect"/>
+    <bean id="hundsunAPILogAspect" class="com.codi.bus.core.aop.HundsunAPILogAspect"/>
+    <aop:config>
+        <aop:aspect ref="customJSONAPILogAspect" order="2">
+            <aop:pointcut
+                expression="within(com.codi.base.log.desensitizer..*)
+				and @annotation(com.codi.base.log.annotation.Loggable)"
+                id="customJSONAPILogPointCut"/>
+            <aop:around method="around" pointcut-ref="customJSONAPILogPointCut"/>
+        </aop:aspect>
+        <aop:aspect ref="hundsunAPILogAspect" order="3">
+            <aop:pointcut
+                expression="within(com.codi.fcloud.ufx..*)
+				and @annotation(com.codi.base.log.annotation.Loggable)"
+                id="hundsunAPILogPointCut"/>
+            <aop:around method="around" pointcut-ref="hundsunAPILogPointCut"/>
+        </aop:aspect>
+    </aop:config>
+
+    <import resource="classpath:spring/spring-scheduler.xml"/>
+</beans>

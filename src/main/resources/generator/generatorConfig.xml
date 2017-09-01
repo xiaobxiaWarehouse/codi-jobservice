@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+	<classPathEntry location="H:\Maven_Repositories\mysql\mysql-connector-java\5.1.13\mysql-connector-java-5.1.13.jar" />
+
+	<context id="Mysql" targetRuntime="MyBatis3">
+		<jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://121.40.187.122:3306/fund_detail"
+			userId="root" password="codimm898sql">
+		</jdbcConnection>
+
+		<javaTypeResolver>
+			<property name="forceBigDecimals" value="false" />
+		</javaTypeResolver>
+
+		<javaModelGenerator targetPackage="com.codi.bus.core.domain" targetProject="src/main/java">
+			<!-- enableSubPackages:是否让schema作为包的后缀 -->
+			<property name="enableSubPackages" value="false" />
+			<!-- 从数据库返回的值被清理前后的空格 -->
+			<property name="trimStrings" value="true" />
+		</javaModelGenerator>
+
+		<sqlMapGenerator targetPackage="mybatis" targetProject="src/main/resources">
+			<property name="enableSubPackages" value="false" />
+		</sqlMapGenerator>
+
+		<javaClientGenerator type="XMLMAPPER" targetPackage="com.codi.bus.core.dao" targetProject="src/main/java">
+			<property name="enableSubPackages" value="false" />
+		</javaClientGenerator>
+
+		<table schema="fund_detail" tableName="MF_QDIIPortfolioIndustry" domainObjectName="FundQDIIPortfolioIndustry"
+			enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false"
+			selectByExampleQueryId="false">
+			<property name="useActualColumnNames" value="true" />
+		</table>
+	</context>
+</generatorConfiguration>

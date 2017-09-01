@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+	<bean id="FundCodeRelationshipJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="name" value="FUND_CODE_RELATIONSHIP_JOB" />
+		<property name="group" value="CODI_JOBS" />
+		<property name="description" value="刷新基金编码关联任务" />
+
+		<property name="jobClass" value="com.codi.jobservice.job.FundCodeRelationshipJob" />
+		<property name="durability" value="true" />
+	</bean>
+
+	<bean id="fundCodeRelationshipTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="name" value="FUND_CODE_RELATIONSHIP_TRIGGER" />
+		<property name="group" value="CODI_TRIGGERS" />
+
+		<property name="jobDetail" ref="FundCodeRelationshipJob" />
+
+		<property name="cronExpression" value="0 10 2 ? * *" />
+	</bean>
+
+</beans>

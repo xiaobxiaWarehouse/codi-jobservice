@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+	<bean id="FundRatingJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="name" value="FUND_RATING_JOB" />
+		<property name="group" value="CODI_JOBS" />
+		<property name="description" value="刷新基金评级任务" />
+
+		<property name="jobClass" value="com.codi.jobservice.job.FundRatingJob" />
+		<property name="durability" value="true" />
+	</bean>
+
+	<bean id="fundRatingTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="name" value="FUND_RATING_JOB_TRIGGER" />
+		<property name="group" value="CODI_TRIGGERS" />
+
+		<property name="jobDetail" ref="FundRatingJob" />
+
+		<!-- 每周1,3早上2点更新 -->
+		<property name="cronExpression" value="0 0 2 ? * 1,3" />
+	</bean>
+
+</beans>

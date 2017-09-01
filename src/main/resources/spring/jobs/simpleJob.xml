@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+	<bean id="SimpleJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="name" value="SIMPLE_JOB" />
+		<property name="group" value="CODI_JOBS" />
+		<property name="description" value="简单JOB测试" />
+
+		<property name="jobClass" value="com.codi.jobservice.job.SimpleJob" />
+		<property name="durability" value="true" />
+	</bean>
+
+
+	<bean id="simpleJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="name" value="SIMPLE_JOB_TRIGGER" />
+		<property name="group" value="CODI_TRIGGERS" />
+
+		<property name="jobDetail" ref="SimpleJob" />
+		<!-- 每隔10s执行一次，just for test -->
+		<property name="cronExpression" value="*/10 * * * * ?" />
+	</bean>
+</beans>
